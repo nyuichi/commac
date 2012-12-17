@@ -9,12 +9,16 @@
 	     (:conc-name v2-))
   x y)
 
-(defun v2+ (v u)
-  (with-slots ((x1 x) (y1 y)) v
-    (with-slots ((x2 x) (y2 y)) u
-      (v2 (+ x1 x2) (+ y1 y2)))))
+(defmacro define-v2-operator2 (name &body body)
+  `(defun ,name (v u)
+     (with-slots ((x1 x) (y1 y)) v
+       (with-slots ((x2 x) (y2 y)) u
+	 ,@body))))
 
-(defun v2- (v u)
-  (with-slots ((x1 x) (y1 y)) v
-    (with-slots ((x2 x) (y2 y)) u
-      (v2 (- x1 x2) (- y1 y2)))))
+(define-v2-operator2 v2+
+  (v2 (+ x1 x2) (+ y1 y2)))
+
+(define-v2-operator2 v2-
+  (v2 (- x1 x2) (- y1 y2)))
+
+
