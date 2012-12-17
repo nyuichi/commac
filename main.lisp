@@ -21,4 +21,7 @@
 (define-v2-operator2 v2-
   (v2 (- x1 x2) (- y1 y2)))
 
+(define-v2-operator2 v2-dot
+  (+ (* x1 x2) (* y1 y2)))
+
 
