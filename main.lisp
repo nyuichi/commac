@@ -3,17 +3,34 @@
 
 (in-package :commac)
 
-(defstruct (vector-2d
-	     (:constructor make-vector-2d)
-	     (:constructor v2 (x y))
-	     (:conc-name v2-))
-  x y)
+(deftype vector-2d ()
+  '(simple-vector 2))
+
+(declaim (inline v2 v2-x v2-y v2+ v2- v2-dot))
+
+(defun v2 (x y)
+  (declare (type fixnum x y))
+  (let ((v2 (make-array 2)))
+    (setf (svref v2 0) x
+	  (svref v2 1) y)
+    v2))
+
+(defun v2-x (v2)
+  (declare (type vector-2d v2))
+  (the fixnum (svref v2 0)))
+
+(defun v2-y (v2)
+  (declare (type vector-2d v2))
+  (the fixnum (svref v2 1)))
 
 (defmacro define-v2-operator2 (name &body body)
   `(defun ,name (v u)
-     (with-slots ((x1 x) (y1 y)) v
-       (with-slots ((x2 x) (y2 y)) u
-	 ,@body))))
+     (declare (type vector-2d v u))
+     (let ((x1 (v2-x v))
+	   (y1 (v2-y v))
+	   (x2 (v2-x u))
+	   (y2 (v2-y u)))
+       ,@body)))
 
 (define-v2-operator2 v2+
   (v2 (+ x1 x2) (+ y1 y2)))
@@ -22,6 +39,11 @@
   (v2 (- x1 x2) (- y1 y2)))
 
 (define-v2-operator2 v2-dot
-  (+ (* x1 x2) (* y1 y2)))
+  (the fixnum
+    (+ (the fixnum (* x1 x2))
+       (the fixnum (* y1 y2)))))
 
+(defun right-angled-p (a b c d)
+  (declare (type vector-2d a b c d))
+  (zerop (v2-dot (v2- a b) (v2- c d))))
 
