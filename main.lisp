@@ -43,6 +43,46 @@
     (+ (the fixnum (* x1 x2))
        (the fixnum (* y1 y2)))))
 
+(defmacro with-gensyms (syms body)
+  `(let ,(loop :for sym :in syms
+	    :collect `(,sym (gensym ,(symbol-name sym))))
+     ,body))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun expand-vector-2d (v)
+    (cond ((and (atom (first v)) (eq (first v) 'v2+))
+	   (with-gensyms (x1 y1 x2 y2)
+	     `(multiple-value-bind (,x1 ,y1) ,(expand-vector-2d (second v))
+		(multiple-value-bind (,x2 ,y2) ,(expand-vector-2d (third v))
+		  (values (+ ,x1 ,x2) (+ ,y1 ,y2))))))
+	  ((and (atom (first v)) (eq (first v) 'v2-))
+	   (with-gensyms (x1 y1 x2 y2)
+	     `(multiple-value-bind (,x1 ,y1) ,(expand-vector-2d (second v))
+		(multiple-value-bind (,x2 ,y2) ,(expand-vector-2d (third v))
+		  (values (- ,x1 ,x2) (- ,y1 ,y2))))))
+	  (t
+	   (with-gensyms (val)
+	     `(let ((,val ,v))
+		(values (v2-x ,val) (v2-y ,val))))))))
+
+(define-compiler-macro v2+ (&whole form)
+  (with-gensyms (x y)
+    `(multiple-value-bind (,x ,y) ,(expand-vector-2d form)
+       (v2 ,x ,y))))
+
+(define-compiler-macro v2- (&whole form)
+  (with-gensyms (x y)
+    `(multiple-value-bind (,x ,y) ,(expand-vector-2d form)
+       (v2 ,x ,y))))
+
+(define-compiler-macro v2-dot (v u)
+  (with-gensyms (x1 y1 x2 y2)
+    `(multiple-value-bind (,x1 ,y1) ,(expand-vector-2d v)
+       (multiple-value-bind (,x2 ,y2) ,(expand-vector-2d u)
+	 (the fixnum
+	   (+ (the fixnum (* ,x1 ,x2))
+	      (the fixnum (* ,y1 ,y2))))))))
+
 (defun right-angled-p (a b c d)
   (declare (type vector-2d a b c d))
   (zerop (v2-dot (v2- a b) (v2- c d))))
