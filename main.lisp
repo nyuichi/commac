@@ -87,3 +87,11 @@
   (declare (type vector-2d a b c d))
   (zerop (v2-dot (v2- a b) (v2- c d))))
 
+(defun right-angled-p* (a b c d)
+  (declare (type vector-2d a b c d))
+  (zerop (+ (the fixnum
+	      (* (- (v2-x a) (v2-x b))
+		 (- (v2-x c) (v2-x d))))
+	    (the fixnum
+	      (* (- (v2-y a) (v2-y b))
+		 (- (v2-y c) (v2-y d)))))))
